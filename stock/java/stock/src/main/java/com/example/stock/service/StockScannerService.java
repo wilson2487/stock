@@ -13,6 +13,8 @@ import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class StockScannerService {
@@ -123,7 +125,11 @@ public class StockScannerService {
     private List<Quote> fetchYahooData(String symbol) throws Exception {
         long p1 = Instant.parse("2020-01-01T00:00:00Z").getEpochSecond();
         long p2 = Instant.now().getEpochSecond();
-        String url = String.format("https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=history", symbol, p1, p2);
+        
+        // 【修正處】使用 URLEncoder 將代號中的 ^ 等特殊字元進行編碼（^TWII 會變成 %5ETWII）
+        String encodedSymbol = URLEncoder.encode(symbol, StandardCharsets.UTF_8.toString());
+        
+        String url = String.format("https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%d&period2=%d&interval=1d&events=history", encodedSymbol, p1, p2);
         
         HttpResponse<String> res = HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(url)).build(), HttpResponse.BodyHandlers.ofString());
         List<Quote> quotes = new ArrayList<>();
